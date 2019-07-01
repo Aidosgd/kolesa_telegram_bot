@@ -17,11 +17,18 @@ class HomeController extends Controller
         $url = 'https://kolesa.kz/cars/mercedes-benz/e-klasse/almaty/?auto-emergency=1&auto-fuel=1&auto-car-transm=2345&auto-car-order=1&year[to]=1995';
 
         $html = file_get_html($url);
+        $i = 0;
+        foreach ($html->find('div.vw-item') as $item){
+            if(isset($item->children[1]->children[3]->children[1]->children[0])){
+               $i++;
+            }
+        }
 
-        $first = $html->find('div.vw-item')[0];
+        $searchRes = $html->find('div.vw-item')[$i];
+
         // get item
-        $data_id = $first->attr['data-id'];
-        $href = $first->children[0]->attr['href'];
+        $data_id = $searchRes->attr['data-id'];
+        $href = $searchRes->children[0]->attr['href'];
 
         $lastVehicle = Vehicle::orderBy('id', 'desc')->first();
 
@@ -34,8 +41,6 @@ class HomeController extends Controller
             ]);
             $vehicle->save();
 
-            return 'Надо отправить сообщение в телегу';
-        }else{
             $text = "Новое объявление на сайте\n"
                 . "https://kolesa.kz" .$href. "\n";
 
@@ -44,6 +49,9 @@ class HomeController extends Controller
                 'parse_mode' => 'HTML',
                 'text' => $text
             ]);
+
+            return 'Надо отправить сообщение в телегу';
+        }else{
             return 'НЕ надо отправлять сообщение в телегу';
         }
     }
